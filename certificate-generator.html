@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #2C3E50;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7F8C8D;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #34495E;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            margin-top: 10px;
+        }
+
+        .info-box {
+            background: #E8F4F8;
+            border-left: 4px solid #3498DB;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #2C3E50;
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        #certificateCanvas {
+            width: 100%;
+            max-width: 800px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .download-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .download-section h3 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .download-buttons button {
+            flex: 1;
+        }
+
+        .download-info {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #555;
+            text-align: left;
+        }
+
+        .download-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .download-info li {
+            margin: 5px 0;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #757F9A 0%, #D7DDE8 100%);
+            color: #2C3E50;
+            margin-top: 10px;
+        }
+
+        .generate-preview-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Form Section -->
+        <div id="formSection">
+            <div class="header">
+                <div class="icon">🎓</div>
+                <h1>Certificate Generator</h1>
+                <p class="subtitle">Generate your certificate instantly!</p>
+            </div>
+
+            <div class="info-box">
+                📝 Fill in your details and preview your certificate before downloading.
+            </div>
+
+            <form id="certificateForm">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="Enter your full name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="eventName">Event/Course Name *</label>
+                    <input 
+                        type="text" 
+                        id="eventName" 
+                        name="eventName" 
+                        placeholder="e.g., Zoom Webinar on Digital Marketing"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date *</label>
+                    <input 
+                        type="date" 
+                        id="date" 
+                        name="date" 
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn generate-preview-btn">Preview Certificate</button>
+            </form>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="previewSection" class="preview-section">
+            <h2 style="color: #2C3E50; margin-bottom: 20px;">Your Certificate is Ready! 🎉</h2>
+            
+            <canvas id="certificateCanvas"></canvas>
+
+            <div class="download-section">
+                <h3>📥 Download Your Certificate</h3>
+                
+                <div class="download-info">
+                    <strong>Choose your preferred format:</strong>
+                    <ul>
+                        <li><strong>PDF:</strong> Best for printing and professional use</li>
+                        <li><strong>Image (PNG):</strong> Easy to share on social media</li>
+                    </ul>
+                </div>
+
+                <div class="download-buttons">
+                    <button class="btn btn-secondary" id="downloadPDF">
+                        📄 Download as PDF
+                    </button>
+                    <button class="btn btn-secondary" id="downloadImage">
+                        🖼️ Download as Image
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn back-btn" id="backBtn">
+                ← Generate Another Certificate
+            </button>
+
+            <div class="success-message" id="successMessage">
+                ✅ Certificate downloaded successfully!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        let currentCertificateData = null;
+
+        // Form submission
+        document.getElementById('certificateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const eventName = document.getElementById('eventName').value;
+            const date = document.getElementById('date').value;
+
+            currentCertificateData = { name, eventName, date };
+            
+            generateCertificate(name, eventName, date);
+            
+            // Show preview section
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('previewSection').classList.add('active');
+        });
+
+        // Back button
+        document.getElementById('backBtn').addEventListener('click', function() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('previewSection').classList.remove('active');
+        });
+
+        // Draw signature function
+        function drawSignature(ctx, x, y, scale = 1) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+            
+            // Signature style
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Draw a cursive-style signature
+            ctx.beginPath();
+            // First letter (stylized)
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-5, -15, 5, -25, 15, -20);
+            ctx.bezierCurveTo(20, -18, 25, -10, 20, 0);
+            ctx.bezierCurveTo(18, 5, 15, 10, 10, 15);
+            ctx.stroke();
+            
+            // Middle part (flowing line)
+            ctx.beginPath();
+            ctx.moveTo(15, -15);
+            ctx.bezierCurveTo(25, -10, 35, -8, 45, -12);
+            ctx.bezierCurveTo(55, -15, 60, -8, 65, -2);
+            ctx.bezierCurveTo(70, 3, 75, 5, 82, 2);
+            ctx.stroke();
+            
+            // Last part (ending flourish)
+            ctx.beginPath();
+            ctx.moveTo(82, 2);
+            ctx.bezierCurveTo(90, -2, 95, -5, 100, -3);
+            ctx.bezierCurveTo(102, -2, 103, 0, 102, 2);
+            ctx.stroke();
+            
+            // Underline flourish
+            ctx.beginPath();
+            ctx.moveTo(5, 20);
+            ctx.bezierCurveTo(30, 18, 60, 22, 95, 18);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Generate Certificate Function
+        function generateCertificate(name, eventName, date) {
+            const canvas = document.getElementById('certificateCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size (landscape A4 proportions)
+            canvas.width = 1200;
+            canvas.height = 848;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Modern Template
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+
+            // Outer border
+            ctx.strokeStyle = '#2C3E50';
+            ctx.lineWidth = 15;
+            ctx.strokeRect(40, 40, width - 80, height - 80);
+
+            // Inner border
+            ctx.strokeStyle = '#3498DB';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(60, 60, width - 120, height - 120);
+
+            // Decorative corners
+            drawCornerDecoration(ctx, 80, 80, 60, '#3498DB');
+            drawCornerDecoration(ctx, width - 80, 80, 60, '#3498DB');
+            drawCornerDecoration(ctx, 80, height - 80, 60, '#3498DB');
+            drawCornerDecoration(ctx, width - 80, height - 80, 60, '#3498DB');
+
+            // Title
+            ctx.fillStyle = '#2C3E50';
+            ctx.font = 'bold 72px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('CERTIFICATE', width / 2, 150);
+
+            // Subtitle
+            ctx.fillStyle = '#7F8C8D';
+            ctx.font = '36px Arial';
+            ctx.fillText('OF ATTENDANCE', width / 2, 210);
+
+            // Decorative line
+            ctx.strokeStyle = '#3498DB';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(width / 2 - 150, 240);
+            ctx.lineTo(width / 2 + 150, 240);
+            ctx.stroke();
+
+            // Body text
+            ctx.fillStyle = '#34495E';
+            ctx.font = '24px Arial';
+            ctx.fillText('This is to certify that', width / 2, 310);
+
+            // Name
+            ctx.fillStyle = '#2C3E50';
+            ctx.font = 'bold 54px Arial';
+            ctx.fillText(name, width / 2, 390);
+
+            // Underline
+            const nameWidth = ctx.measureText(name).width;
+            ctx.strokeStyle = '#BDC3C7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width / 2 - nameWidth / 2, 410);
+            ctx.lineTo(width / 2 + nameWidth / 2, 410);
+            ctx.stroke();
+
+            // Has attended
+            ctx.fillStyle = '#34495E';
+            ctx.font = '24px Arial';
+            ctx.fillText('has successfully attended', width / 2, 470);
+
+            // Event name
+            ctx.fillStyle = '#2C3E50';
+            ctx.font = 'bold 32px Arial';
+            ctx.fillText(eventName, width / 2, 530);
+
+            // Date
+            ctx.fillStyle = '#7F8C8D';
+            ctx.font = '20px Arial';
+            const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            ctx.fillText('Date: ' + formattedDate, width / 2, 600);
+
+            // Signature
+            drawSignature(ctx, 230, height - 170, 1.2);
+
+            // Signature line
+            ctx.strokeStyle = '#BDC3C7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(150, height - 140);
+            ctx.lineTo(450, height - 140);
+            ctx.stroke();
+
+            // Dr. Aditya Shelke name below signature
+            ctx.fillStyle = '#2C3E50';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Dr. Aditya Shelke', 300, height - 110);
+
+            // "Authorized Signature" text
+            ctx.fillStyle = '#34495E';
+            ctx.font = '16px Arial';
+            ctx.fillText('Authorized Signature', 300, height - 85);
+        }
+
+        function drawCornerDecoration(ctx, x, y, size, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - size / 2, y);
+            ctx.lineTo(x, y);
+            ctx.lineTo(x, y - size / 2);
+            ctx.stroke();
+        }
+
+        // Download as PDF
+        document.getElementById('downloadPDF').addEventListener('click', function() {
+            const canvas = document.getElementById('certificateCanvas');
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const imgWidth = 297; // A4 width in mm (landscape)
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight, '', 'FAST');
+            pdf.save(`Certificate_${currentCertificateData.name.replace(/\s+/g, '_')}.pdf`);
+
+            showSuccessMessage();
+        });
+
+        // Download as Image
+        document.getElementById('downloadImage').addEventListener('click', function() {
+            const canvas = document.getElementById('certificateCanvas');
+            const link = document.createElement('a');
+            link.download = `Certificate_${currentCertificateData.name.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+
+            showSuccessMessage();
+        });
+
+        function showSuccessMessage() {
+            const message = document.getElementById('successMessage');
+            message.classList.add('show');
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
